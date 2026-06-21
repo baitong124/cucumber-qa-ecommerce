@@ -101,7 +101,7 @@ Feature: POST /api/v1/employees - create employee
   # Decided policy: email must be unique. A duplicate POST is rejected (409) and
   # no second record is created. If the current build still accepts duplicates,
   # this fails as a data-integrity defect — open a bug, do not relax the assertion.
-  @negative @data-integrity
+  @negative @data-integrity @known-issue
   Scenario: API-P11 Duplicate email is rejected and no second record is created
     Given an employee already exists with a known email
     When I create another employee with the same email

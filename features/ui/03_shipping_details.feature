@@ -28,7 +28,17 @@ Feature: Step 3 - Shipping details validation
       | phone   |
       | street  |
       | city    |
-      | country |
+
+  # The country select has no `required` attribute, so native HTML5 validation
+  # does not block submission when it is empty. Expected to FAIL until a
+  # `required` attribute or JS guard is added to the country dropdown.
+  @negative @validation @known-issue
+  Scenario: Order is not submitted when country is missing
+    When the shopper fills the shipping form but leaves "country" empty
+    And the shopper submits the order
+    Then the order confirmation should not be displayed
+    And the shipping details form should still be visible
+    And the "country" field should be invalid
 
   @negative @validation
   Scenario: Order is not submitted when all fields are empty

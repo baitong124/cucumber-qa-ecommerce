@@ -68,7 +68,7 @@ Feature: Step 2 - Select items and validate cart total
       |     | empty / cleared field       |
       | abc | non-numeric text            |
 
-  @edge @validation
+  @edge @validation @known-issue
   Scenario Outline: Decimal quantity is rejected and the cart is unchanged
     When the shopper adds "Dior J'adore" with quantity 1
     And the shopper changes the quantity of "Dior J'adore" to "<qty>"

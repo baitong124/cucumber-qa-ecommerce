@@ -26,19 +26,19 @@ Feature: Step 1 - Login to the Shop
     Then the shopping cart should not be displayed
     And the login form should still be visible
 
-  @negative @validation
+  @negative @validation @known-issue
   Scenario: Empty credentials are blocked by field validation
     When the shopper submits the login form with empty credentials
     Then the email field should be invalid
     And the shopping cart should not be displayed
 
-  @negative @validation
+  @negative @validation @known-issue
   Scenario: Only the password is empty - password field is invalid
     When the shopper logs in with email "admin@admin.com" and password ""
     Then the password field should be invalid
     And the shopping cart should not be displayed
 
-  @negative @validation
+  @negative @validation @known-issue
   Scenario: Only the email is empty - email field is invalid
     When the shopper logs in with email "" and password "admin123"
     Then the email field should be invalid

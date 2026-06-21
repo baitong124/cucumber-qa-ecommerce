@@ -41,6 +41,9 @@ export class ShopPage extends BasePage {
 
   async waitLoaded(): Promise<void> {
     await this.waitVisible(this.checkoutBtn);
+    // Products are fetched asynchronously from an external API after the page renders.
+    // Wait for at least one product card to appear before tests try to interact with them.
+    await this.page.locator('.shop-item').first().waitFor({ state: 'visible' });
   }
 
   /** Catalogue unit price shown on the product card. */
