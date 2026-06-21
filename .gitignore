@@ -6,3 +6,6 @@ test-results/
 .DS_Store
 .env
 !reports/.gitkeep
+
+# personal notes – not for version control
+Code-Walkthrough-Script.md
