@@ -1,0 +1,115 @@
+name: QA Automation CI
+
+# Demo on GitHub Actions: runs the Cucumber-JS + Playwright BDD suite on every
+# push / PR and on demand. UI and API run as separate jobs so a failure in one
+# is isolated and easy to triage. Reports & traces are uploaded as artifacts.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # UI suite — runs against the live QA Practice site (not @api).
+  # ---------------------------------------------------------------------------
+  ui-tests:
+    name: UI tests (Playwright + Cucumber)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser (chromium + OS deps)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run UI scenarios
+        run: npm run test:ui
+        env:
+          HEADLESS: "true"
+          BASE_URL: https://qa-practice.razvanvancea.ro/auth_ecommerce.html
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-cucumber-report
+          path: reports/cucumber-report.html
+          if-no-files-found: ignore
+
+      - name: Upload failure traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-traces
+          path: reports/trace-*.zip
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # API suite — runs against the qa-practice-api Spring Boot service in Docker.
+  # The service is started by Actions and mapped to localhost:8887 (matches
+  # API_BASE_URL default). A readiness gate fails the job if the API never comes
+  # up, so the suite can never "false-green" by silently skipping.
+  # ---------------------------------------------------------------------------
+  api-tests:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      qa-api:
+        image: rvancea/qa-practice-api:latest
+        ports:
+          - 8887:8081
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for API to be ready
+        run: |
+          echo "Waiting for API at http://localhost:8887 ..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8887/employees >/dev/null 2>&1; then
+              echo "API is up."
+              exit 0
+            fi
+            echo "  attempt $i/30 — not ready yet, retrying in 3s"
+            sleep 3
+          done
+          echo "::error::API did not become ready in time — failing instead of skipping."
+          exit 1
+
+      - name: Run API scenarios
+        run: npm run test:api
+        env:
+          API_BASE_URL: http://localhost:8887
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-cucumber-report
+          path: reports/cucumber-report.html
+          if-no-files-found: ignore

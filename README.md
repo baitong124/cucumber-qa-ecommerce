@@ -1,5 +1,7 @@
 # QA Automation Portfolio — E-commerce Checkout Suite
 
+[![QA Automation CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+
 > **Interview showcase project.** A production-style BDD automation suite built to
 > demonstrate test design, automation architecture, and risk-based QA thinking — not
 > just a passing test run.
